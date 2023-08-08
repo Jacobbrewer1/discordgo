@@ -520,10 +520,6 @@ func (s *Session) requestGuildMembers(data requestGuildMembersData) (err error) 
 // If you use the AddHandler() function to register a handler for the
 // "OnEvent" event then all events will be passed to that handler.
 func (s *Session) onEvent(messageType int, message []byte) (*Event, error) {
-	if s.onMessage != nil {
-		s.onMessage()
-	}
-
 	var err error
 	var reader io.Reader
 	reader = bytes.NewBuffer(message)
@@ -639,6 +635,10 @@ func (s *Session) onEvent(messageType int, message []byte) (*Event, error) {
 		s.handleEvent(e.Type, e.Struct)
 	} else {
 		s.log(LogWarning, "unknown event: Op: %d, Seq: %d, Type: %s, Data: %s", e.Operation, e.Sequence, e.Type, string(e.RawData))
+	}
+
+	if s.eventNotifier != nil {
+		s.eventNotifier <- e
 	}
 
 	// For legacy reasons, we send the raw event also, this could be useful for handling unknown events.
