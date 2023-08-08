@@ -135,15 +135,13 @@ type Session struct {
 	// used to make sure gateway websocket writes do not happen concurrently
 	wsMutex sync.Mutex
 
-	onMessage func()
+	// used to notify external sources of incoming events
+	eventNotifier chan<- any
 }
 
-// SetOnMessage sets the onMessage function. This function is called when a message is received from the gateway.
-// This function is called before any other event handlers. This function is called synchronously. This function
-// should not be used to handle messages. Use AddHandler instead. This function is intended to be used to log
-// messages or for monitoring purposes.
-func (s *Session) SetOnMessage(onMessage func()) {
-	s.onMessage = onMessage
+// SetEventNotifier sets the event notifier channel. This channel is used to notify of incoming events. If the channel is nil, no events will be sent.
+func (s *Session) SetEventNotifier(eventNotifier chan<- any) {
+	s.eventNotifier = eventNotifier
 }
 
 // Application stores values for a Discord Application
