@@ -135,12 +135,11 @@ type Session struct {
 	// used to make sure gateway websocket writes do not happen concurrently
 	wsMutex sync.Mutex
 
+	// used to notify external sources of incoming events
 	eventNotifier chan<- any
 }
 
-// SetEventNotifier sets the event notifier channel. This channel will be used to notify the session of incoming events.
-// This is useful for when you want to use the session as a gateway for events from another source. For example, you can
-// use this to pass events from a Discord Gateway to the session. The channel must be buffered!
+// SetEventNotifier sets the event notifier channel. This channel is used to notify of incoming events. If the channel is nil, no events will be sent.
 func (s *Session) SetEventNotifier(eventNotifier chan<- any) {
 	s.eventNotifier = eventNotifier
 }
