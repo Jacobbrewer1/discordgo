@@ -135,13 +135,8 @@ type Session struct {
 	// used to make sure gateway websocket writes do not happen concurrently
 	wsMutex sync.Mutex
 
-	// used to notify external sources of incoming events
+	// eventNotifier is used to notify the event handler of events
 	eventNotifier chan<- any
-}
-
-// SetEventNotifier sets the event notifier channel. This channel is used to notify of incoming events. If the channel is nil, no events will be sent.
-func (s *Session) SetEventNotifier(eventNotifier chan<- any) {
-	s.eventNotifier = eventNotifier
 }
 
 // Application stores values for a Discord Application
