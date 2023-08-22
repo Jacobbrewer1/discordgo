@@ -109,7 +109,7 @@ func (s *Session) Open() error {
 	if err != nil {
 		return err
 	}
-	if e.Operation != 10 {
+	if e.Operation != OperationHello {
 		err = fmt.Errorf("expecting Op 10, got Op %d instead", e.Operation)
 		return err
 	}
@@ -550,22 +550,11 @@ func (s *Session) onEvent(messageType int, message []byte) (*Event, error) {
 		return e, err
 	}
 
-	// If the eventNotifier channel is not full and not nil then send to channel.
-	if s.eventNotifier != nil {
-		select {
-		case s.eventNotifier <- e:
-		default:
-			// If the channel is full, drop the event. This is to prevent blocking the gateway. This is not a problem
-			// as the eventNotifier channel is only used for monitoring purposes. If you want to handle events, use
-			// AddHandler.
-		}
-	}
-
 	s.log(LogDebug, "Op: %d, Seq: %d, Type: %s, Data: %s\n\n", e.Operation, e.Sequence, e.Type, string(e.RawData))
 
 	// Ping request.
 	// Must respond with a heartbeat packet within 5 seconds
-	if e.Operation == 1 {
+	if e.Operation == OperationHeartbeat {
 		s.log(LogInformational, "sending heartbeat in response to Op1")
 		s.wsMutex.Lock()
 		err = s.wsConn.WriteJSON(heartbeatOp{1, atomic.LoadInt64(s.sequence)})
@@ -580,16 +569,16 @@ func (s *Session) onEvent(messageType int, message []byte) (*Event, error) {
 
 	// Reconnect
 	// Must immediately disconnect from gateway and reconnect to new gateway.
-	if e.Operation == 7 {
+	if e.Operation == OperationReconnect {
 		s.log(LogInformational, "Closing and reconnecting in response to Op7")
-		s.CloseWithCode(websocket.CloseServiceRestart)
+		_ = s.CloseWithCode(websocket.CloseServiceRestart)
 		s.reconnect()
 		return e, nil
 	}
 
 	// Invalid Session
 	// Must respond with a Identify packet.
-	if e.Operation == 9 {
+	if e.Operation == OperationInvalidSession {
 
 		s.log(LogInformational, "sending identify packet to gateway in response to Op9")
 
@@ -602,12 +591,12 @@ func (s *Session) onEvent(messageType int, message []byte) (*Event, error) {
 		return e, nil
 	}
 
-	if e.Operation == 10 {
+	if e.Operation == OperationHello {
 		// Op10 is handled by Open()
 		return e, nil
 	}
 
-	if e.Operation == 11 {
+	if e.Operation == OperationHeartbeatACK {
 		s.Lock()
 		s.LastHeartbeatAck = time.Now().UTC()
 		s.Unlock()
@@ -616,7 +605,7 @@ func (s *Session) onEvent(messageType int, message []byte) (*Event, error) {
 	}
 
 	// Do not try to Dispatch a non-Dispatch Message
-	if e.Operation != 0 {
+	if e.Operation != OperationDispatch {
 		// But we probably should be doing something with them.
 		// TEMP
 		s.log(LogWarning, "unknown Op: %d, Seq: %d, Type: %s, Data: %s, message: %s", e.Operation, e.Sequence, e.Type, string(e.RawData), string(message))
@@ -625,6 +614,17 @@ func (s *Session) onEvent(messageType int, message []byte) (*Event, error) {
 
 	// Store the message sequence
 	atomic.StoreInt64(s.sequence, e.Sequence)
+
+	// If the eventNotifier channel is not full and not nil then send to channel.
+	if s.eventNotifier != nil {
+		select {
+		case s.eventNotifier <- e:
+		default:
+			// If the channel is full, drop the event. This is to prevent blocking the gateway. This is not a problem
+			// as the eventNotifier channel is only used for monitoring purposes. If you want to handle events, use
+			// AddHandler.
+		}
+	}
 
 	// Map event to registered event handlers and pass it along to any registered handlers.
 	if eh, ok := registeredInterfaceProviders[e.Type]; ok {
