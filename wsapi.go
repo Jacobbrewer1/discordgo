@@ -247,8 +247,7 @@ func (s *Session) listen(wsConn *websocket.Conn, listening <-chan interface{}) {
 			return
 
 		default:
-			s.onEvent(messageType, message)
-
+			_, _ = s.onEvent(messageType, message)
 		}
 	}
 }
@@ -520,18 +519,6 @@ func (s *Session) requestGuildMembers(data requestGuildMembersData) (err error) 
 // If you use the AddHandler() function to register a handler for the
 // "OnEvent" event then all events will be passed to that handler.
 func (s *Session) onEvent(messageType int, message []byte) (*Event, error) {
-
-	// If the eventNotifier channel is not full and not nil then send to channel.
-	if s.eventNotifier != nil {
-		select {
-		case s.eventNotifier <- message:
-		default:
-			// If the channel is full, drop the event. This is to prevent blocking the gateway. This is not a problem
-			// as the eventNotifier channel is only used for monitoring purposes. If you want to handle events, use
-			// AddHandler.
-		}
-	}
-
 	var err error
 	var reader io.Reader
 	reader = bytes.NewBuffer(message)
@@ -561,6 +548,17 @@ func (s *Session) onEvent(messageType int, message []byte) (*Event, error) {
 	if err = decoder.Decode(&e); err != nil {
 		s.log(LogError, "error decoding websocket message, %s", err)
 		return e, err
+	}
+
+	// If the eventNotifier channel is not full and not nil then send to channel.
+	if s.eventNotifier != nil {
+		select {
+		case s.eventNotifier <- e:
+		default:
+			// If the channel is full, drop the event. This is to prevent blocking the gateway. This is not a problem
+			// as the eventNotifier channel is only used for monitoring purposes. If you want to handle events, use
+			// AddHandler.
+		}
 	}
 
 	s.log(LogDebug, "Op: %d, Seq: %d, Type: %s, Data: %s\n\n", e.Operation, e.Sequence, e.Type, string(e.RawData))
