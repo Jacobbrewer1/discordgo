@@ -6,37 +6,37 @@ type Operation int
 
 const (
 	// OperationDispatch - An event was dispatched.
-	OperationDispatch Operation = iota
+	OperationDispatch Operation = 0
 
 	// OperationHeartbeat - Fired periodically by the client to keep the connection alive.
-	OperationHeartbeat
+	OperationHeartbeat Operation = 1
 
 	// OperationIdentify - Starts a new session during the initial handshake.
-	OperationIdentify
+	OperationIdentify Operation = 2
 
 	// OperationPresenceUpdate - Update the client's presence.
-	OperationPresenceUpdate
+	OperationPresenceUpdate Operation = 3
 
 	// OperationVoiceStateUpdate - Used to join/leave or move between voice channels.
-	OperationVoiceStateUpdate
+	OperationVoiceStateUpdate Operation = 4
 
 	// OperationResume - Resume a previous session that was disconnected.
-	OperationResume
+	OperationResume Operation = 6
 
 	// OperationReconnect - You should attempt to reconnect and resume immediately.
-	OperationReconnect
+	OperationReconnect Operation = 7
 
 	// OperationRequestGuildMembers - Request information about offline guild members in a large guild.
-	OperationRequestGuildMembers
+	OperationRequestGuildMembers Operation = 8
 
 	// OperationInvalidSession - The session has been invalidated. You should reconnect and identify/resume accordingly.
-	OperationInvalidSession
+	OperationInvalidSession Operation = 9
 
 	// OperationHello - Sent immediately after connecting, contains the heartbeat_interval to use.
-	OperationHello
+	OperationHello Operation = 10
 
 	// OperationHeartbeatACK - Sent in response to receiving a heartbeat to acknowledge that it has been received.
-	OperationHeartbeatACK
+	OperationHeartbeatACK Operation = 11
 )
 
 // String returns a string representation of the Operation
