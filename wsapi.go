@@ -552,6 +552,17 @@ func (s *Session) onEvent(messageType int, message []byte) (*Event, error) {
 
 	s.log(LogDebug, "Op: %d, Seq: %d, Type: %s, Data: %s\n\n", e.Operation, e.Sequence, e.Type, string(e.RawData))
 
+	// If the eventNotifier channel is not full and not nil then send to channel.
+	if s.eventNotifier != nil {
+		select {
+		case s.eventNotifier <- e:
+		default:
+			// If the channel is full, drop the event. This is to prevent blocking the gateway. This is not a problem
+			// as the eventNotifier channel is only used for monitoring purposes. If you want to handle events, use
+			// AddHandler.
+		}
+	}
+
 	// Ping request.
 	// Must respond with a heartbeat packet within 5 seconds
 	if e.Operation == OperationHeartbeat {
@@ -614,17 +625,6 @@ func (s *Session) onEvent(messageType int, message []byte) (*Event, error) {
 
 	// Store the message sequence
 	atomic.StoreInt64(s.sequence, e.Sequence)
-
-	// If the eventNotifier channel is not full and not nil then send to channel.
-	if s.eventNotifier != nil {
-		select {
-		case s.eventNotifier <- e:
-		default:
-			// If the channel is full, drop the event. This is to prevent blocking the gateway. This is not a problem
-			// as the eventNotifier channel is only used for monitoring purposes. If you want to handle events, use
-			// AddHandler.
-		}
-	}
 
 	// Map event to registered event handlers and pass it along to any registered handlers.
 	if eh, ok := registeredInterfaceProviders[e.Type]; ok {
