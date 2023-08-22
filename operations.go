@@ -39,6 +39,35 @@ const (
 	OperationHeartbeatACK
 )
 
+// String returns a string representation of the Operation
+func (o Operation) String() string {
+	switch o {
+	case OperationDispatch:
+		return "Dispatch"
+	case OperationHeartbeat:
+		return "Heartbeat"
+	case OperationIdentify:
+		return "Identify"
+	case OperationPresenceUpdate:
+		return "Presence Update"
+	case OperationVoiceStateUpdate:
+		return "Voice State Update"
+	case OperationResume:
+		return "Resume"
+	case OperationReconnect:
+		return "Reconnect"
+	case OperationRequestGuildMembers:
+		return "Request Guild Members"
+	case OperationInvalidSession:
+		return "Invalid Session"
+	case OperationHello:
+		return "Hello"
+	case OperationHeartbeatACK:
+		return "Heartbeat ACK"
+	}
+	return fmt.Sprintf("Unknown_Operation_(%d)", o)
+}
+
 // MarshalJSON returns the int code for the Operation
 func (o *Operation) MarshalJSON() ([]byte, error) {
 	i, err := Marshal(*o)
