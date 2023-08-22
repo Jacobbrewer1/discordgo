@@ -49,21 +49,21 @@ func (o Operation) String() string {
 	case OperationIdentify:
 		return "Identify"
 	case OperationPresenceUpdate:
-		return "Presence Update"
+		return "Presence_Update"
 	case OperationVoiceStateUpdate:
-		return "Voice State Update"
+		return "Voice_State_Update"
 	case OperationResume:
 		return "Resume"
 	case OperationReconnect:
 		return "Reconnect"
 	case OperationRequestGuildMembers:
-		return "Request Guild Members"
+		return "Request_Guild_Members"
 	case OperationInvalidSession:
-		return "Invalid Session"
+		return "Invalid_Session"
 	case OperationHello:
 		return "Hello"
 	case OperationHeartbeatACK:
-		return "Heartbeat ACK"
+		return "Heartbeat_ACK"
 	}
 	return fmt.Sprintf("Unknown_Operation_(%d)", o)
 }
